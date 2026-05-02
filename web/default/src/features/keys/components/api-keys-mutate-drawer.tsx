@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getUserModels, getUserGroups } from '@/lib/api'
 import { getCurrencyDisplay, getCurrencyLabel } from '@/lib/currency'
+import { isPlainRecord } from '@/lib/safe-json'
 import { cn } from '@/lib/utils'
 import { useStatus } from '@/hooks/use-status'
 import { Button } from '@/components/ui/button'
@@ -84,7 +85,7 @@ function ApiKeyFormSection(props: ApiKeyFormSectionProps) {
           <Icon className='size-4 sm:size-5' />
         </div>
         <div className='min-w-0'>
-          <h3 className='text-sm font-medium leading-none'>{props.title}</h3>
+          <h3 className='text-sm leading-none font-medium'>{props.title}</h3>
           <p className='text-muted-foreground mt-0.5 text-xs sm:mt-1'>
             {props.description}
           </p>
@@ -123,14 +124,19 @@ export function ApiKeysMutateDrawer({
     staleTime: 5 * 60 * 1000,
   })
 
-  const models = modelsData?.data || []
-  const groupsRaw = groupsData?.data || {}
+  const models = Array.isArray(modelsData?.data) ? modelsData.data : []
+  const groupsRaw = isPlainRecord(groupsData?.data) ? groupsData.data : {}
   const groups: ApiKeyGroupOption[] = Object.entries(groupsRaw).map(
     ([key, info]) => ({
       value: key,
       label: key,
-      desc: info.desc || key,
-      ratio: info.ratio,
+      desc:
+        isPlainRecord(info) && typeof info.desc === 'string' ? info.desc : key,
+      ratio:
+        isPlainRecord(info) &&
+        (typeof info.ratio === 'number' || typeof info.ratio === 'string')
+          ? info.ratio
+          : undefined,
     })
   )
 
@@ -285,10 +291,7 @@ export function ApiKeysMutateDrawer({
                   <FormItem>
                     <FormLabel>{t('Name')}</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('Enter a name')}
-                      />
+                      <Input {...field} placeholder={t('Enter a name')} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -501,7 +504,7 @@ export function ApiKeysMutateDrawer({
                       <Settings2 className='size-4 sm:size-5' />
                     </div>
                     <div className='min-w-0 flex-1'>
-                      <h3 className='text-sm font-medium leading-none'>
+                      <h3 className='text-sm leading-none font-medium'>
                         {t('Advanced Settings')}
                       </h3>
                       <p className='text-muted-foreground mt-1 text-xs'>

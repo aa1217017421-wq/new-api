@@ -33,8 +33,10 @@ export function useAccordionState(pageId: string) {
     try {
       const stored = localStorage.getItem(storageKey)
       if (stored) {
+        const parsed = JSON.parse(stored)
+        if (!Array.isArray(parsed)) return
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setOpenItems(JSON.parse(stored))
+        setOpenItems(parsed.filter((item) => typeof item === 'string'))
       }
     } catch (_error) {
       // eslint-disable-next-line no-console

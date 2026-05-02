@@ -14,6 +14,7 @@ import { getStatus } from '@/lib/api'
 import '@/lib/dayjs'
 import { applyFaviconToDom } from '@/lib/dom-utils'
 import { handleServerError } from '@/lib/handle-server-error'
+import { readStorageRecord } from '@/lib/safe-json'
 import { DirectionProvider } from './context/direction-provider'
 import { FontProvider } from './context/font-provider'
 import { ThemeProvider } from './context/theme-provider'
@@ -65,9 +66,8 @@ const queryClient = new QueryClient({
           const redirect = `${router.history.location.href}`
           router.navigate({ to: '/sign-in', search: { redirect } })
         }
-        if (error.response?.status === 500) {
+        if ((error.response?.status ?? 0) >= 500) {
           toast.error(i18next.t('Internal Server Error!'))
-          router.navigate({ to: '/500' })
         }
       }
     },
@@ -104,12 +104,9 @@ const rootElement = document.getElementById('root')!
     }
     // Cache-first
     try {
-      const saved = localStorage.getItem('status')
-      if (saved) {
-        const s = JSON.parse(saved)
-        if (s?.system_name) apply(s.system_name)
-        if (s?.logo) applyFaviconToDom(s.logo)
-      }
+      const s = readStorageRecord('status')
+      if (typeof s?.system_name === 'string') apply(s.system_name)
+      if (typeof s?.logo === 'string') applyFaviconToDom(s.logo)
     } catch {
       /* empty */
     }

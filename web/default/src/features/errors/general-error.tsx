@@ -5,15 +5,40 @@ import { Button } from '@/components/ui/button'
 
 type GeneralErrorProps = React.HTMLAttributes<HTMLDivElement> & {
   minimal?: boolean
+  error?: unknown
 }
 
 export function GeneralError({
   className,
   minimal = false,
+  error,
 }: GeneralErrorProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { history } = useRouter()
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : ''
+  const isAssetLoadError =
+    /ChunkLoadError|Loading chunk|dynamically imported module|module script|failed to fetch.*module|error loading.*module|preload.*failed/i.test(
+      errorMessage
+    )
+  const handleReload = () => {
+    if (isAssetLoadError && typeof window !== 'undefined' && window.caches) {
+      window.caches
+        .keys()
+        .then((keys) =>
+          Promise.all(keys.map((key) => window.caches.delete(key)))
+        )
+        .finally(() => window.location.reload())
+      return
+    }
+    window.location.reload()
+  }
+
   return (
     <div className={cn('h-svh w-full', className)}>
       <div className='m-auto flex h-full w-full flex-col items-center justify-center gap-2'>
@@ -21,16 +46,31 @@ export function GeneralError({
           <h1 className='text-[7rem] leading-tight font-bold'>500</h1>
         )}
         <span className='font-medium'>
-          {t('Oops! Something went wrong')} {`:')`}
+          {isAssetLoadError
+            ? t('Page assets failed to load')
+            : t('Oops! Something went wrong')}{' '}
+          {`:')`}
         </span>
         <p className='text-muted-foreground text-center'>
-          {t('We apologize for the inconvenience.')} <br />{' '}
-          {t('Please try again later.')}
+          {isAssetLoadError ? (
+            <>
+              {t('The page resources may have expired or been rate limited.')}
+              <br /> {t('Please refresh the page to load the latest version.')}
+            </>
+          ) : (
+            <>
+              {t('We apologize for the inconvenience.')} <br />{' '}
+              {t('Please try again later.')}
+            </>
+          )}
         </p>
         {!minimal && (
           <div className='mt-6 flex gap-4'>
             <Button variant='outline' onClick={() => history.go(-1)}>
               {t('Go Back')}
+            </Button>
+            <Button variant='outline' onClick={handleReload}>
+              {t('Refresh')}
             </Button>
             <Button onClick={() => navigate({ to: '/' })}>
               {t('Back to Home')}

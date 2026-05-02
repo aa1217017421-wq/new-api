@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { readStorageRecord } from '@/lib/safe-json'
 
 export type UserPermissions = {
   sidebar_settings?: boolean
@@ -43,18 +44,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()((set) => {
   // Restore user info from localStorage
   const initUser = (() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const saved = window.localStorage.getItem('user')
-        return saved ? JSON.parse(saved) : null
-      }
-    } catch {
-      // Clear dirty data when parsing fails
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('user')
-      }
-    }
-    return null
+    return (readStorageRecord('user') as AuthUser | undefined) ?? null
   })()
 
   return {

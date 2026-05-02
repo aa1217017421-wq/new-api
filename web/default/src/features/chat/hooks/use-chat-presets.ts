@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { readStorageRecord } from '@/lib/safe-json'
 import { useStatus } from '@/hooks/use-status'
 import type { SystemStatus } from '@/features/auth/types'
 import {
@@ -8,15 +9,8 @@ import {
 } from '../lib/chat-links'
 
 function getStoredStatusChats(): RawChatConfig {
-  if (typeof window === 'undefined') return undefined
-  try {
-    const raw = window.localStorage.getItem('status')
-    if (!raw) return undefined
-    const parsed = JSON.parse(raw)
-    return parsed?.chats ?? parsed?.Chats
-  } catch {
-    return undefined
-  }
+  const parsed = readStorageRecord('status')
+  return (parsed?.chats ?? parsed?.Chats) as RawChatConfig
 }
 
 function extractServerAddress(status: SystemStatus | null) {

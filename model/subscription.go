@@ -35,6 +35,9 @@ const (
 var (
 	ErrSubscriptionOrderNotFound      = errors.New("subscription order not found")
 	ErrSubscriptionOrderStatusInvalid = errors.New("subscription order status invalid")
+	ErrSubscriptionNoActive           = errors.New("no active subscription")
+	ErrSubscriptionQuotaInsufficient  = errors.New("subscription quota insufficient")
+	ErrSubscriptionModelNotCovered    = errors.New("subscription model not covered")
 )
 
 const (
@@ -966,6 +969,20 @@ func maybeResetUserSubscriptionWithPlanTx(tx *gorm.DB, sub *UserSubscription, pl
 	return tx.Save(sub).Error
 }
 
+func userSubscriptionCoversModelTx(tx *gorm.DB, sub *UserSubscription, plan *SubscriptionPlan, modelName string) bool {
+	if sub == nil {
+		return false
+	}
+	upgradeGroup := strings.TrimSpace(sub.UpgradeGroup)
+	if upgradeGroup == "" && plan != nil {
+		upgradeGroup = strings.TrimSpace(plan.UpgradeGroup)
+	}
+	if upgradeGroup == "" {
+		return true
+	}
+	return IsGroupModelEnabledTx(tx, upgradeGroup, strings.TrimSpace(modelName))
+}
+
 // PreConsumeUserSubscription pre-consumes from any active subscription total quota.
 func PreConsumeUserSubscription(requestId string, userId int, modelName string, quotaType int, amount int64) (*SubscriptionPreConsumeResult, error) {
 	if userId <= 0 {
@@ -1008,11 +1025,12 @@ func PreConsumeUserSubscription(requestId string, userId int, modelName string, 
 			Where("user_id = ? AND status = ? AND end_time > ?", userId, "active", now).
 			Order("end_time asc, id asc").
 			Find(&subs).Error; err != nil {
-			return errors.New("no active subscription")
+			return err
 		}
 		if len(subs) == 0 {
-			return errors.New("no active subscription")
+			return ErrSubscriptionNoActive
 		}
+		hasCoveredSubscription := false
 		for _, candidate := range subs {
 			sub := candidate
 			plan, err := getSubscriptionPlanByIdTx(tx, sub.PlanId)
@@ -1022,6 +1040,10 @@ func PreConsumeUserSubscription(requestId string, userId int, modelName string, 
 			if err := maybeResetUserSubscriptionWithPlanTx(tx, &sub, plan, now); err != nil {
 				return err
 			}
+			if !userSubscriptionCoversModelTx(tx, &sub, plan, modelName) {
+				continue
+			}
+			hasCoveredSubscription = true
 			usedBefore := sub.AmountUsed
 			if sub.AmountTotal > 0 {
 				remain := sub.AmountTotal - usedBefore
@@ -1062,7 +1084,10 @@ func PreConsumeUserSubscription(requestId string, userId int, modelName string, 
 			returnValue.AmountUsedAfter = sub.AmountUsed
 			return nil
 		}
-		return fmt.Errorf("subscription quota insufficient, need=%d", amount)
+		if !hasCoveredSubscription {
+			return fmt.Errorf("%w: model=%s", ErrSubscriptionModelNotCovered, strings.TrimSpace(modelName))
+		}
+		return fmt.Errorf("%w, need=%d", ErrSubscriptionQuotaInsufficient, amount)
 	})
 	if err != nil {
 		return nil, err

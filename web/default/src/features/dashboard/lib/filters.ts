@@ -1,3 +1,4 @@
+import { isPlainRecord } from '@/lib/safe-json'
 import type { TimeGranularity } from '@/lib/time'
 import { getRollingDateRange } from '@/lib/time'
 import {
@@ -86,7 +87,8 @@ export function getSavedChartPreferences(): DashboardChartPreferences {
     const raw = localStorage.getItem(DASHBOARD_CHART_PREFERENCES_STORAGE_KEY)
     if (!raw) return fallbackPreferences
 
-    const parsed = JSON.parse(raw) as Partial<DashboardChartPreferences>
+    const parsed = JSON.parse(raw) as unknown
+    if (!isPlainRecord(parsed)) return fallbackPreferences
     return {
       consumptionDistributionChart: isConsumptionDistributionChartType(
         parsed.consumptionDistributionChart
@@ -99,9 +101,7 @@ export function getSavedChartPreferences(): DashboardChartPreferences {
       defaultTimeRangeDays: isTimeRangePresetDays(parsed.defaultTimeRangeDays)
         ? parsed.defaultTimeRangeDays
         : fallbackPreferences.defaultTimeRangeDays,
-      defaultTimeGranularity: isTimeGranularity(
-        parsed.defaultTimeGranularity
-      )
+      defaultTimeGranularity: isTimeGranularity(parsed.defaultTimeGranularity)
         ? parsed.defaultTimeGranularity
         : fallbackPreferences.defaultTimeGranularity,
     }

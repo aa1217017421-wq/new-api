@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { getUserGroups } from '@/lib/api'
 import { formatQuota, formatTimestampToDate } from '@/lib/format'
+import { isPlainRecord } from '@/lib/safe-json'
 import { cn } from '@/lib/utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
@@ -47,7 +48,13 @@ function useGroupRatios(): Record<string, number> {
       const option = res.data.find((o) => o.key === 'GroupRatio')
       if (!option?.value) return {}
       try {
-        return JSON.parse(option.value) as Record<string, number>
+        const parsed = JSON.parse(option.value)
+        if (!isPlainRecord(parsed)) return {}
+        return Object.fromEntries(
+          Object.entries(parsed).filter((entry): entry is [string, number] => {
+            return typeof entry[1] === 'number'
+          })
+        )
       } catch {
         return {}
       }
@@ -60,10 +67,10 @@ function useGroupRatios(): Record<string, number> {
     enabled: !isAdmin,
     staleTime: 5 * 60 * 1000,
     select: (res) => {
-      if (!res.success || !res.data) return {}
+      if (!res.success || !isPlainRecord(res.data)) return {}
       const ratios: Record<string, number> = {}
       for (const [group, info] of Object.entries(res.data)) {
-        if (typeof info.ratio === 'number') {
+        if (isPlainRecord(info) && typeof info.ratio === 'number') {
           ratios[group] = info.ratio
         }
       }

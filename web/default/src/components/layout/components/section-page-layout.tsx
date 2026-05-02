@@ -69,7 +69,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
     <PageFooterProvider container={footerContainer}>
       <AppHeader />
 
-      <Main>
+      <Main className='bg-[#F8F8F6]'>
         <div className='shrink-0 px-3 pt-3 pb-2.5 sm:px-4 sm:pt-6 sm:pb-4'>
           {breadcrumb != null && <div className='mb-2 sm:mb-3'>{breadcrumb}</div>}
           <div className='flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:gap-x-4'>

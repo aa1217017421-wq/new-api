@@ -1,20 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSystemConfigStore } from '@/stores/system-config-store'
 import { getStatus } from '@/lib/api'
+import { readStorageRecord } from '@/lib/safe-json'
 import type { SystemStatus } from '@/features/auth/types'
 import { mapStatusDataToConfig } from './use-system-config'
 
 // Get initial cache from localStorage
 function getInitialStatus(): SystemStatus | undefined {
-  try {
-    if (typeof window !== 'undefined') {
-      const saved = window.localStorage.getItem('status')
-      return saved ? (JSON.parse(saved) as SystemStatus) : undefined
-    }
-  } catch {
-    /* empty */
-  }
-  return undefined
+  return readStorageRecord('status') as SystemStatus | undefined
 }
 
 export function useStatus() {

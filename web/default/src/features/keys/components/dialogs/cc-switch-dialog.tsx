@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { getUserModels } from '@/lib/api'
+import { readStorageRecord } from '@/lib/safe-json'
 import { Button } from '@/components/ui/button'
 import { ComboboxInput } from '@/components/ui/combobox-input'
 import {
@@ -41,15 +42,8 @@ const APP_CONFIGS = {
 type AppType = keyof typeof APP_CONFIGS
 
 function getServerAddress(): string {
-  try {
-    const raw = localStorage.getItem('status')
-    if (raw) {
-      const status = JSON.parse(raw)
-      if (status.server_address) return status.server_address
-    }
-  } catch {
-    /* empty */
-  }
+  const status = readStorageRecord('status')
+  if (typeof status?.server_address === 'string') return status.server_address
   return window.location.origin
 }
 
@@ -95,7 +89,7 @@ export function CCSwitchDialog(props: Props) {
   })
 
   const modelOptions = useMemo(() => {
-    const items = modelsData?.data ?? []
+    const items = Array.isArray(modelsData?.data) ? modelsData.data : []
     return items.map((m) => ({ value: m, label: m }))
   }, [modelsData?.data])
 

@@ -1,4 +1,5 @@
 import { api } from '@/lib/api'
+import { isPlainRecord } from '@/lib/safe-json'
 import type {
   ApiKey,
   ApiResponse,
@@ -7,6 +8,33 @@ import type {
   SearchApiKeysParams,
   ApiKeyFormData,
 } from './types'
+import { apiKeySchema } from './types'
+
+function normalizeApiKeys(value: unknown): ApiKey[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    const parsed = apiKeySchema.safeParse(item)
+    return parsed.success ? [parsed.data] : []
+  })
+}
+
+function normalizeApiKeysPayload(value: unknown): ApiKey[] {
+  if (Array.isArray(value)) return normalizeApiKeys(value)
+  if (isPlainRecord(value)) return normalizeApiKeys(value.items)
+  return []
+}
+
+function numberOrDefault(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined
+}
+
+function successOf(value: unknown): boolean {
+  return isPlainRecord(value) && value.success === true
+}
 
 // ============================================================================
 // API Key Management
@@ -18,7 +46,19 @@ export async function getApiKeys(
 ): Promise<GetApiKeysResponse> {
   const { p = 1, size = 10 } = params
   const res = await api.get(`/api/token/?p=${p}&size=${size}`)
-  return res.data
+  const raw = res.data
+  const rawData = isPlainRecord(raw?.data) ? raw.data : {}
+  const items = normalizeApiKeys(rawData.items)
+  return {
+    success: successOf(raw),
+    message: stringOrUndefined(raw?.message),
+    data: {
+      items,
+      total: numberOrDefault(rawData.total, items.length),
+      page: numberOrDefault(rawData.page, p),
+      page_size: numberOrDefault(rawData.page_size, size),
+    },
+  }
 }
 
 // Search API keys by keyword or token (with pagination)
@@ -32,13 +72,24 @@ export async function searchApiKeys(
   if (p != null) queryParams.set('p', String(p))
   if (size != null) queryParams.set('size', String(size))
   const res = await api.get(`/api/token/search?${queryParams.toString()}`)
-  return res.data
+  const raw = res.data
+  return {
+    success: successOf(raw),
+    message: stringOrUndefined(raw?.message),
+    data: normalizeApiKeysPayload(raw?.data),
+  }
 }
 
 // Get single API key by ID
 export async function getApiKey(id: number): Promise<ApiResponse<ApiKey>> {
   const res = await api.get(`/api/token/${id}`)
-  return res.data
+  const raw = res.data
+  const parsed = apiKeySchema.safeParse(raw?.data)
+  return {
+    success: successOf(raw) && parsed.success,
+    message: stringOrUndefined(raw?.message),
+    data: parsed.success ? parsed.data : undefined,
+  }
 }
 
 // Create a new API key
@@ -95,5 +146,18 @@ export async function fetchTokenKeysBatch(ids: number[]): Promise<{
   data?: { keys: Record<number, string> }
 }> {
   const res = await api.post('/api/token/batch/keys', { ids })
-  return res.data
+  const raw = res.data
+  const keysRaw =
+    isPlainRecord(raw?.data) && isPlainRecord(raw.data.keys)
+      ? raw.data.keys
+      : {}
+  const keys: Record<number, string> = {}
+  for (const [id, key] of Object.entries(keysRaw)) {
+    if (typeof key === 'string') keys[Number(id)] = key
+  }
+  return {
+    success: successOf(raw),
+    message: stringOrUndefined(raw?.message),
+    data: { keys },
+  }
 }

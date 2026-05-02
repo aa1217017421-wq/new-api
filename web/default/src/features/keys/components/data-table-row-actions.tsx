@@ -15,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { copyToClipboard } from '@/lib/copy-to-clipboard'
+import { readStorageRecord } from '@/lib/safe-json'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -41,15 +42,8 @@ import { apiKeySchema } from '../types'
 import { useApiKeys } from './api-keys-provider'
 
 function getServerAddress(): string {
-  try {
-    const raw = localStorage.getItem('status')
-    if (raw) {
-      const status = JSON.parse(raw)
-      if (status.server_address) return status.server_address as string
-    }
-  } catch {
-    /* empty */
-  }
+  const status = readStorageRecord('status')
+  if (typeof status?.server_address === 'string') return status.server_address
   return window.location.origin
 }
 
@@ -69,7 +63,9 @@ export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const { t } = useTranslation()
-  const apiKey = apiKeySchema.parse(row.original)
+  const parsedApiKey = apiKeySchema.safeParse(row.original)
+  if (!parsedApiKey.success) return null
+  const apiKey = parsedApiKey.data
   const {
     setOpen,
     setCurrentRow,
