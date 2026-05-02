@@ -1,0 +1,125 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f8f8f6;
+  --foreground: #141413;
+  --card: #fffefb;
+  --card-foreground: #141413;
+  --popover: #fffefb;
+  --popover-foreground: #141413;
+  --primary: #c96442;
+  --primary-foreground: #faf9f5;
+  --secondary: #ebe9df;
+  --secondary-foreground: #3d3d3a;
+  --muted: #f0eee6;
+  --muted-foreground: #5e5d59;
+  --accent: #e8e6dc;
+  --accent-foreground: #3d3d3a;
+  --destructive: #b53333;
+  --border: #e2dfd3;
+  --input: #d7d4c8;
+  --ring: #d97757;
+  --chart-1: #d97757;
+  --chart-2: #5f6f52;
+  --chart-3: #4d4c48;
+  --chart-4: #a36a22;
+  --chart-5: #3898ec;
+  --radius: 0.5rem;
+  --sidebar: #f4f3ee;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: #ebe9df;
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --skeleton-base: #ebe9df;
+  --skeleton-highlight: #faf9f5;
+}
+
+.dark {
+  --background: #20201f;
+  --foreground: #f6f3ea;
+  --card: #2a2a28;
+  --card-foreground: #f6f3ea;
+  --popover: #30302e;
+  --popover-foreground: #f6f3ea;
+  --primary: #d97757;
+  --primary-foreground: #141413;
+  --secondary: #353531;
+  --secondary-foreground: #f0eee6;
+  --muted: #30302e;
+  --muted-foreground: #b0aea5;
+  --accent: #3a392f;
+  --accent-foreground: #f6f3ea;
+  --destructive: #e56a6a;
+  --border: #4a4840;
+  --input: #5a574d;
+  --ring: #d97757;
+  --chart-1: #d97757;
+  --chart-2: #95a071;
+  --chart-3: #d6c7a2;
+  --chart-4: #c9934e;
+  --chart-5: #78aee8;
+  --sidebar: #252523;
+  --sidebar-foreground: #f0eee6;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: #34332e;
+  --sidebar-accent-foreground: #f6f3ea;
+  --sidebar-border: #48463f;
+  --sidebar-ring: var(--ring);
+  --skeleton-base: #30302e;
+  --skeleton-highlight: #3d3d3a;
+}
+
+@theme inline {
+  --font-sans:
+    'Lato', 'Public Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-inter:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-manrope:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
